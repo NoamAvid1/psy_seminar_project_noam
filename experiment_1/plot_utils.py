@@ -7,26 +7,6 @@ from plotly.subplots import make_subplots
 import stat_utils
 
 
-def get_rdm_fig(file_data, state, dataset_title_name, net_type):
-    fig = px.imshow(file_data, labels=dict(color="Disimilarity"))
-    fig.update_xaxes(side="top")
-    fig.update_layout(
-        width=650,
-        height=650,
-        # updating the X axis titles and tick labels:
-        xaxis=dict(
-            tickvals=[i * 32 + 10 for i in range(5)],  # tick labels distances
-            ticktext=["" for i in range(5)],
-            title_text=f"RDM for {state} {dataset_title_name}<br>net type = {net_type}"),
-        # updating the y axis titles and tick labels:
-        yaxis=dict(
-            tickvals=[i * 32 for i in range(5)],
-            ticktext=["" for i in range(5)]),
-    )
-    fig.update_xaxes(automargin=True)
-    return fig
-
-
 def get_roc_fig(file_data, state, dataset_title_name, net_type):
     # Setting up data arrays for plotting:
     data_arr = np.array(file_data)[:, 1:]  # array of the csv data (not including title)
@@ -68,49 +48,75 @@ def get_roc_fig(file_data, state, dataset_title_name, net_type):
     return fig
 
 
-def get_rocs_new_style(dataset_to_pairs, nets_titles, datasets_titles, results_path):
+def plot_rdm(paths_dict, nets_titles, datasets_titles, results_path):
     """
-    :param dataset_to_pairs: dictionary, where keys are tuples of strings (net_type,dataset_name) and value is path to csv file
-     in both states (upright\inverted)
+    :param paths_dict: dictionary, where keys are tuples of strings (net_domain,dataset_name) and value is a list of
+    paths to csv file in both states (upright\inverted)
     :param nets_titles: list of titles
     :param datasets_titles: list of titles
-    :return:
+    :param results_path: path to save the image of plots
+    :return: None
+    """
+    rdm_size = 300
+    num_rows = len(nets_titles)
+    num_cols = len(datasets_titles) * 2
+    rdms = make_subplots(rows=num_rows, cols=num_cols,
+                         subplot_titles=paths_dict.keys(),
+                         x_title='Dataset', y_title='Model domain',
+                         row_titles=nets_titles,
+                         column_titles=datasets_titles,
+                         vertical_spacing=0.05,
+                         row_heights=num_cols * [100])
+    for indx, domain_and_dataset in enumerate(list(paths_dict.keys())):
+        for state_index, path in enumerate(paths_dict[domain_and_dataset]):  # iterate over upright and inverted
+            df = pd.read_csv(path)
+            rdms.add_trace(go.Heatmap(z=df),
+                           row=1 + (indx // num_rows ), col=1 + (indx % num_rows) + state_index)
+            rdms.update_layout(height=rdm_size * num_rows, width=rdm_size * num_cols, template='plotly_white')
+    rdms.write_image(results_path)
+    print(f"wrote RDMs to path {results_path}")
+
+
+
+def plot_roc(paths_dict, nets_titles, datasets_titles, results_path):
+    """
+    :param paths_dict: dictionary, where keys are tuples of strings (net_domain,dataset_name) and value is a list of
+    paths to csv file in both states (upright\inverted)
+    :param nets_titles: list of titles
+    :param datasets_titles: list of titles
+    :param results_path: path to save the image of plots
+    :return: None
     """
     line_designs = [
         dict(color='royalblue', width=2),
         dict(color='firebrick', width=2),
-        dict(color='royalblue', width=2, dash='dot'),
-        dict(color='firebrick', width=2, dash='dot'),
     ]
     num_nets = len(nets_titles)
     num_datasets = len(datasets_titles)
     rocs = make_subplots(rows=num_nets, cols=num_datasets,
-                         subplot_titles=dataset_to_pairs.keys(),
+                         subplot_titles=paths_dict.keys(),
                          x_title='Dataset', y_title='Model domain',
                          row_titles=nets_titles,
                          column_titles=datasets_titles,
                          vertical_spacing=0.05,
                          row_heights=num_datasets * [100])
-    for indx, data_type in enumerate(list(dataset_to_pairs.keys())):
-        for i, path in enumerate(dataset_to_pairs[data_type]): # iterate over upright and inverted
+    for indx, domain_and_dataset in enumerate(list(paths_dict.keys())):
+        for i, path in enumerate(paths_dict[domain_and_dataset]):  # iterate over upright and inverted
             df = pd.read_csv(path)
             verification_dist_list = stat_utils.rdm_to_dist_list(df)[1:]
-            print(verification_dist_list)
-            print(verification_dist_list.columns)
-            print(verification_dist_list['cos'])
             fpr, tpr, thresh, roc_auc = stat_utils.calc_graph_measurements(verification_dist_list, 'same', 'cos')
-            # @todo: edit:
             rocs.add_trace(
-                go.Scatter(x=fpr, y=tpr, name=f'{data_type}. AUC={roc_auc}', mode='lines', line=line_designs[i % 2]),
+                go.Scatter(x=fpr, y=tpr, name=f'{domain_and_dataset}. AUC={roc_auc}', mode='lines',
+                           line=line_designs[i % 2]),
                 row=1 + (indx // num_datasets), col=1 + (indx % num_datasets))
     for i in range(num_nets):
         for j in range(num_datasets):
             rocs.add_shape(
                 type='line', line=dict(dash='dash'),
                 x0=0, x1=1, y0=0, y1=1, row=1 + j, col=1 + i)
-    rocs.update_layout(height= 2 * 750, width=5 * 750 // 2, template='plotly_white', showlegend=False)
+    rocs.update_layout(height=2 * 750, width=5 * 750 // 2, template='plotly_white', showlegend=False)
     rocs.update_yaxes(range=[0.0, 1.0])
     rocs.update_yaxes(range=[0.0, 1.0])
     rocs.show()
     rocs.write_image(results_path)
-    print(f"wrote to path {results_path}")
+    print(f"wrote ROCs to path {results_path}")
