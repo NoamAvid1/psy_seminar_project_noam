@@ -77,13 +77,12 @@ def plot_rdm(paths_dict, nets_titles, datasets_titles, results_path):
     print(f"wrote RDMs to path {results_path}")
 
 
-
-def plot_roc(paths_dict, nets_titles, datasets_titles, results_path):
+def plot_roc(paths_dict, nets_titles, datasets, results_path):
     """
     :param paths_dict: dictionary, where keys are tuples of strings (net_domain,dataset_name) and value is a list of
-    paths to csv file in both states (upright\inverted)
+    paths to csv files in both states (upright\inverted)
     :param nets_titles: list of titles
-    :param datasets_titles: list of titles
+    :param datasets: list of Dataset objects
     :param results_path: path to save the image of plots
     :return: None
     """
@@ -92,7 +91,8 @@ def plot_roc(paths_dict, nets_titles, datasets_titles, results_path):
         dict(color='firebrick', width=2),
     ]
     num_nets = len(nets_titles)
-    num_datasets = len(datasets_titles)
+    num_datasets = len(datasets)
+    datasets_titles = map(lambda x: x.dataset_title, datasets)
     rocs = make_subplots(rows=num_nets, cols=num_datasets,
                          subplot_titles=paths_dict.keys(),
                          x_title='Dataset', y_title='Model domain',
@@ -100,15 +100,16 @@ def plot_roc(paths_dict, nets_titles, datasets_titles, results_path):
                          column_titles=datasets_titles,
                          vertical_spacing=0.05,
                          row_heights=num_datasets * [100])
-    for indx, domain_and_dataset in enumerate(list(paths_dict.keys())):
-        for i, path in enumerate(paths_dict[domain_and_dataset]):  # iterate over upright and inverted
-            df = pd.read_csv(path)
-            verification_dist_list = stat_utils.rdm_to_dist_list(df)[1:]
-            fpr, tpr, thresh, roc_auc = stat_utils.calc_graph_measurements(verification_dist_list, 'same', 'cos')
-            rocs.add_trace(
-                go.Scatter(x=fpr, y=tpr, name=f'{domain_and_dataset}. AUC={roc_auc}', mode='lines',
-                           line=line_designs[i % 2]),
-                row=1 + (indx // num_datasets), col=1 + (indx % num_datasets))
+    for i, domain in enumerate(nets_titles):
+        for j, dataset in enumerate(datasets):
+            for k, path in enumerate(paths_dict[(domain, dataset.title)]):  # iterate over upright and inverted
+                df = pd.read_csv(path)
+                verification_dist_list = stat_utils.rdm_to_dist_list(df, dataset.image_to_class_map_path)
+                fpr, tpr, thresh, roc_auc = stat_utils.calc_graph_measurements(verification_dist_list, 'same', 'cos')
+                rocs.add_trace(
+                    go.Scatter(x=fpr, y=tpr, name=f'{domain} net, {dataset.title} dataset. AUC={roc_auc}', mode='lines',
+                               line=line_designs[k % 2]),
+                    row=1 + i, col=1 + j)
     for i in range(num_nets):
         for j in range(num_datasets):
             rocs.add_shape(

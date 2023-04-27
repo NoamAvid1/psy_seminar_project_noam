@@ -1,5 +1,3 @@
-from scipy import stats
-from sklearn import metrics
 import pandas as pd
 import numpy as np
 from sklearn.metrics import roc_curve, auc, roc_auc_score
@@ -31,13 +29,17 @@ def remove_rdm_redundancies(rdm:pd.DataFrame) -> pd.DataFrame:
     return temp
 
 
-def rdm_to_dist_list(rdm: pd.DataFrame) -> pd.DataFrame:
+def rdm_to_dist_list(rdm: pd.DataFrame, img_to_class_path: str = "") -> pd.DataFrame:
     """
     Given a full RDM, remove redundancies and return it in a format of a distance list
     """
+    rdm = rdm.iloc[:, 1:]  # remove column of images names
     rdm = remove_rdm_redundancies(rdm)
-    rdm.index = [str(i // 10) + ':' + str(col) for i, col in enumerate(rdm.index)]
-    rdm.columns = [str(i // 10) + ':' + str(col) for i, col in enumerate(rdm.columns)]
+    # csv that maps every image to its class:
+    img_to_class = pd.read_csv(img_to_class_path)
+    # index and columns are of format <class_name>:<image_name>"
+    rdm.index = [str(img_to_class.loc[row][0]) + ':' + str(row) for row in img_to_class.index]
+    rdm.columns = [str(img_to_class.loc[row][0]) + ':' + str(row) for row in img_to_class.index]
     stacked = rdm.stack()
     no_diag = pd.DataFrame(stacked.dropna()).rename(columns={0: 'cos'})
 
@@ -46,8 +48,7 @@ def rdm_to_dist_list(rdm: pd.DataFrame) -> pd.DataFrame:
         same.append(idx[0].split(':')[0] == idx[1].split(':')[0])
     no_diag['same'] = same
     return no_diag
-#
-#
+
 # def calc_graph_measurments_noam(df: pd.DataFrame):
 #     # Setting up data arrays for plotting:
 #     data_arr = np.array(df)[:, 1:]  # array of the csv data (not including title)
