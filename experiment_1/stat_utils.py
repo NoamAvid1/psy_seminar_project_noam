@@ -36,13 +36,12 @@ def rdm_to_dist_list(rdm: pd.DataFrame, img_to_class_path: str = "") -> pd.DataF
     rdm = rdm.iloc[:, 1:]  # remove column of images names
     rdm = remove_rdm_redundancies(rdm)
     # csv that maps every image to its class:
-    img_to_class = pd.read_csv(img_to_class_path)
+    img_to_class = pd.read_csv(img_to_class_path, index_col=0)
     # index and columns are of format <class_name>:<image_name>"
     rdm.index = [str(img_to_class.loc[row][0]) + ':' + str(row) for row in img_to_class.index]
     rdm.columns = [str(img_to_class.loc[row][0]) + ':' + str(row) for row in img_to_class.index]
     stacked = rdm.stack()
     no_diag = pd.DataFrame(stacked.dropna()).rename(columns={0: 'cos'})
-
     same = []
     for idx in no_diag.index:
         same.append(idx[0].split(':')[0] == idx[1].split(':')[0])
