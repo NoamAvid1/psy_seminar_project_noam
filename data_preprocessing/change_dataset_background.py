@@ -5,9 +5,9 @@ import os
 import random
 import numpy as np
 
-BACKGROUND_WIDTH, BACKGROUND_HEIGHT = (1600, 1200)
-NUM_TRAIN = 100
-NUM_VAL = 25
+BACKGROUND_WIDTH, BACKGROUND_HEIGHT = (1600, 1200) # size of new image in the dataset
+NUM_TRAIN = 100 # number of images per class in train folder of the new dataset
+NUM_VAL = 25    # number of images per class in val folder
 BRIGHTNESS_CRITERIA = [215, 230, 235, 245, 250]  # how strictly we crop corners of image
 BACKGROUND_IMAGE_PATH = 'background.jpg'
 
@@ -27,7 +27,7 @@ def get_random_object_size(width, height):
     return int(width * ratio), int(height * ratio)
 
 
-def get_random_object_location(background_image, front_image):
+def get_random_object_location(background_image):
     width_loc = random.randint(0,4)
     height_loc = random.randint(0,3)
     width = background_image.width // 10 * width_loc
@@ -50,7 +50,6 @@ def change_image_background(old_image_path, background_path, new_image_path, bri
     front_image = front_image.convert("RGBA")
     # process background:
     background_image = Image.open(background_path)
-    background_image = background_image.rotate(180)
     background_image.thumbnail((BACKGROUND_WIDTH, BACKGROUND_HEIGHT))
     background_image = background_image.convert("RGBA")
 
@@ -68,33 +67,39 @@ def change_image_background(old_image_path, background_path, new_image_path, bri
     width, height = get_random_object_location(background_image, front_image)
 
     background_image.paste(front_image, (width, height), front_image)
-    background_image = background_image.rotate(180)
     background_image.save(new_image_path, format="png")
 
 
 def change_dataset_background(old_dataset_path, new_dataset_path):
     for fold in ["train", "val"]:
+        print(f"started {fold}")
         num_to_sample = NUM_TRAIN if fold == "train" else NUM_VAL
         old_dir_path = os.path.join(old_dataset_path, fold)
-        new_dir_path = os.path.join(new_dataset_path, fold)
-        images = os.listdir(old_dir_path)
-        image_count = 0
-        iter_count = 1
-        while image_count < num_to_sample:
-            for image in images:
-                if image_count >= num_to_sample:
-                    break
-                old_image_path = os.path.join(old_dir_path, iter_count, image)
-                new_image_path = os.path.join(new_dir_path, iter_count, image)
-                brightness_criterion = random.choice(BRIGHTNESS_CRITERIA)
-                get_random_background()
-                change_image_background(old_image_path, BACKGROUND_IMAGE_PATH, new_image_path,
-                                        brightness_criterion)
-                image_count += 1
-            iter_count += 1
+        for cls_num, cls in enumerate(os.listdir(old_dir_path)):
+            old_class_path = os.path.join(old_dir_path, cls)
+            new_class_path = os.path.join(new_dataset_path, fold, cls)
+            if not os.path.exists(new_class_path):
+                os.makedirs(new_class_path)
+            images = os.listdir(old_class_path)
+            image_count = 0
+            iter_count = 1
+            while image_count < num_to_sample:
+                for image in images:
+                    if image_count >= num_to_sample:
+                        break
+                    old_image_path = os.path.join(old_class_path, image)
+                    new_image_path = os.path.join(new_class_path, image[:-4] + "_" + str(iter_count) + ".png")
+                    brightness_criterion = random.choice(BRIGHTNESS_CRITERIA)
+                    get_random_background()
+                    change_image_background(old_image_path, BACKGROUND_IMAGE_PATH, new_image_path,
+                                            brightness_criterion)
+                    image_count += 1
+                iter_count += 1
+            print(f"* {cls_num + 1}/{len(os.listdir(old_dir_path))} classes")
     if os.path.exists(BACKGROUND_IMAGE_PATH):
         os.remove(BACKGROUND_IMAGE_PATH)
 
 
 if __name__ == '__main__':
-    change_dataset_background("", "")
+    change_dataset_background("/home/ssd_storage/datasets/students/Noam/Hands_upright/",
+                              "/home/ssd_storage/datasets/students/Noam/Hands_upright_bg")
