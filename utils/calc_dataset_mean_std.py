@@ -4,7 +4,7 @@ import numpy as np
 import cv2
 import os
 
-train_img_root = '/galitylab/students/Noam/Datasets/100_objects_300_each/train/'
+train_img_root = '/galitylab/students/Noam/Datasets/hands_both_bg/train/'
 
 def calc_avg_mean_std(folder_names, img_root, size):
     mean_sum = np.array([0., 0., 0.])
@@ -35,6 +35,9 @@ print("started run")
 folder_names = os.listdir(train_img_root)
 train_mean, train_std = calc_avg_mean_std(folder_names, train_img_root, (1600,1200))
 print(f'calculating mean and std for dataset {train_img_root}')
-print(f'train mean: {train_mean}, NORMALIZED: {train_mean / 255}')
-print(f'train std: {train_std}, NORMALIZED: {train_std / 255}')
+print(f'train mean: {train_mean}, train std: {train_std}')
+print("NORMALIZED:")
+print()
+# print(f'train mean: {train_mean}, NORMALIZED: {train_mean / 255}')
+# print(f'train std: {train_std}, NORMALIZED: {train_std / 255}')
 
