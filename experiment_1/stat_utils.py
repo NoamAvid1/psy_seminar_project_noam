@@ -48,26 +48,20 @@ def rdm_to_dist_list(rdm: pd.DataFrame, img_to_class_path: str = "") -> pd.DataF
     no_diag['same'] = same
     return no_diag
 
-# def calc_graph_measurments_noam(df: pd.DataFrame):
-#     # Setting up data arrays for plotting:
-#     data_arr = np.array(df)[:, 1:]  # array of the csv data (not including title)
-#     data_vector_shape = (data_arr.shape[0] * data_arr.shape[1] - data_arr.shape[
-#         0],)  # desired vector size is (160X160) - 160, Since we will delete the main diagonal
-#     # create vectors for roc plotting:
-#     same_pair_mat = np.ones((2, 2))
-#     y_test = np.kron(np.eye((data_arr.shape[0] // 2), dtype=int),
-#                      same_pair_mat)  # y_test = block diagonal matrix, each block is 2X2 matrix of "1"s.
-#     # delete main diagonal (not comparing a picture to itself!):
-#     y_test = y_test[~np.eye(y_test.shape[0], dtype=bool)].reshape(y_test.shape[0], -1)
-#     # reshape y_test into a vector:
-#     y_test = y_test.reshape(*data_vector_shape)
-#     arr_norm = np.linalg.norm(data_arr)  # compute std
-#     # noramlized the distances and get the "similarity" score:
-#     probs = (1 - data_arr / arr_norm)
-#     probs = probs[~np.eye(probs.shape[0], dtype=bool)].reshape(probs.shape[0], -1)
-#     # reshape probabilities into a vector:
-#     probs = probs.reshape(*data_vector_shape)
-#
-#     # Compute ROC curve and area the curve:
-#     fpr, tpr, thresholds = roc_curve(y_test, probs)
-#     roc_auc = auc(fpr, tpr)
+
+def is_same_class(pair):
+    """
+    Takes a pairs list entry in the format "(class1/image1_name, class2/image2_name)"
+    and checks if both images belong to the same class
+    """
+    return eval(pair)[0].split('/')[0] == eval(pair)[1].split('/')[0]
+
+
+def pairs_list_to_dist_list(df: pd.DataFrame, dataset_and_rotation):
+    """
+    Given df of pair and dist, add "same" column and rename to "cos" column
+    """
+    df = df[(df['type'] == dataset_and_rotation)]
+    df['same'] = df.iloc[:, 0].apply(is_same_class)
+    df.rename({df.columns[1]: 'cos'}, axis=1, inplace=True)
+    return df

@@ -40,7 +40,53 @@ def plot_rdm(paths_dict, nets_titles, datasets_titles, results_path):
     print(f"wrote RDMs to path {results_path}")
 
 
-def plot_roc(paths_dict, nets_titles, datasets, results_path):
+def plot_pairs_list_roc(net_to_csv: dict, datasets_names, results_path):
+    """
+        :param net_to_csv: list of paths of dists csv files, each csv file contains dists
+        for the net for all
+        :param nets_titles: list of titles
+        :param datasets_names: list of Dataset names
+        :param results_path: path to save the image of plots
+        :return: None
+        """
+    line_designs = [
+        dict(color='royalblue', width=2),
+        dict(color='firebrick', width=2),
+    ]
+    nets_titles = list(net_to_csv.keys())
+    num_nets = len(nets_titles)
+    num_datasets = len(datasets_names)
+    rocs = make_subplots(rows=num_nets, cols=num_datasets,
+                         x_title='Dataset', y_title='Model domain',
+                         row_titles=nets_titles,
+                         column_titles=datasets_names,
+                         vertical_spacing=0.05,
+                         row_heights=num_nets * [100])
+    for domain_index, domain in enumerate(list(net_to_csv.keys())):
+        df = pd.read_csv(net_to_csv[domain])
+        for dataset_index, dataset in enumerate(datasets_names):
+            for rotation_state in ["upright", "inverted"]:
+                dataset_and_rotation = f"{dataset}_{rotation_state}"
+                verification_dist_list = stat_utils.pairs_list_to_dist_list(df, dataset_and_rotation)
+                fpr, tpr, thresh, roc_auc = stat_utils.calc_graph_measurements(verification_dist_list, 'same', 'cos')
+                rocs.add_trace(
+                    go.Scatter(x=fpr, y=tpr, name=f'{domain} net, {dataset.title} dataset. AUC={roc_auc}', mode='lines',
+                               line=line_designs[0 if rotation_state == "upright" else 1]),
+                    row=1 + domain_index, col=1 + dataset_index)
+    for i in range(num_nets):
+        for j in range(num_datasets):
+            rocs.add_shape(
+                type='line', line=dict(dash='dash'),
+                x0=0, x1=1, y0=0, y1=1, row=1 + i, col=1 + j)
+    rocs.update_layout(height=2 * 750, width=5 * 750 // 2, template='plotly_white', showlegend=False)
+    rocs.update_yaxes(range=[0.0, 1.0])
+    rocs.update_yaxes(range=[0.0, 1.0])
+    rocs.show()
+    rocs.write_image(results_path)
+    print(f"wrote ROCs to path {results_path}")
+
+
+def plot_dist_mat_roc(paths_dict, nets_titles, datasets, results_path):
     """
     :param paths_dict: dictionary, where keys are tuples of strings (net_domain,dataset_name) and value is a list of
     paths to csv files in both states (upright\inverted)

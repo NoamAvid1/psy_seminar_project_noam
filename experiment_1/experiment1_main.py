@@ -1,30 +1,43 @@
 import os
 import pandas as pd
-from plot_utils import plot_rdm,plot_roc, plot_single_roc
+from plot_utils import plot_rdm, plot_dist_mat_roc, plot_single_roc, plot_pairs_list_roc
 from collections import namedtuple
 from datetime import datetime
 
-# define named tuples for networks:
-Net = namedtuple("Net", ["title", "dir_name", "architecture", "results_layer"])
-faces_net = Net("Faces", "faces_sampled_by_ratio","vgg16", "fc7")
-objects_net = Net("Objects", "objects_sampled_by_ratio", "vgg16", "fc7")
-dorsal_right_hands_net = Net("Dorsal Right Hands", "dorsal_right_hands", "resnet50", "resnet_last_fc")
-hands_both_net = Net("Both Hands", "hands_both", "vgg16", "fc7")
-net_types = [faces_net, objects_net, dorsal_right_hands_net, hands_both_net]
+ROTATION_STATES = ["Upright", "Inverted"]
+PAIRS_CSV_TYPE = "pairs_list"  # "pairs_list" or "dist_mat".
 
-# define named tuples for datasets:
-Dataset = namedtuple("Dataset", ["title", "dir_name", "image_to_class_map_path"])
-faces_dataset = Dataset("Faces", "faces", "/galitylab/students/Noam/Datasets/100_faces_sampled_by_ratio/faces_val_img_to_class.csv")
-objects_dataset = Dataset("Objects", "objects",  "/galitylab/students/Noam/Datasets/100_objects_sampled_by_ratio/objects_val_img_to_class.csv")
-dorsal_right_hands_dataset = Dataset("Dorsal Right Hands","dorsal_right_hands", "/galitylab/students/Noam/Datasets/100_dorsal_right_hands/dorsal_right_hands_val_img_to_class.csv")
-hands_both_dataset = Dataset("Both hands","hands_both", "/galitylab/students/Noam/Datasets/100_hands_both/both_hands_val_img_to_class.csv")
-hands_both_bg_dataset = Dataset("Both hands","hands_both", "/galitylab/students/Noam/Datasets/100_hands_both/both_hands_val_img_to_class.csv")
-# datasets = [faces_dataset, objects_dataset, dorsal_right_hands_dataset, hands_both_dataset]
-datasets = [faces_dataset, objects_dataset, dorsal_right_hands_dataset, hands_both_bg_dataset]
 
-rotation_states = ["Upright", "Inverted"]
-nets_titles = list(map(lambda x: x.title, net_types))
-datasets_titles = list(map(lambda x: x.title, datasets))
+def get_dists_mat_nets():
+    # define named tuples for networks:
+    Net = namedtuple("Net", ["title", "dir_name", "architecture", "results_layer"])
+    faces_net = Net("Faces", "faces_sampled_by_ratio","vgg16", "fc7")
+    objects_net = Net("Objects", "objects_sampled_by_ratio", "vgg16", "fc7")
+    dorsal_right_hands_net = Net("Dorsal Right Hands", "dorsal_right_hands", "resnet50", "resnet_last_fc")
+    hands_both_net = Net("Both Hands", "hands_both", "vgg16", "fc7")
+    net_types = [faces_net, objects_net, dorsal_right_hands_net, hands_both_net]
+    return net_types
+
+
+def get_dists_mat_datasets():
+    # define named tuples for datasets:
+    Dataset = namedtuple("Dataset", ["title", "dir_name", "image_to_class_map_path"])
+    faces_dataset = Dataset("Faces", "faces", "/galitylab/students/Noam/Datasets/100_faces_sampled_by_ratio/faces_val_img_to_class.csv")
+    objects_dataset = Dataset("Objects", "objects",  "/galitylab/students/Noam/Datasets/100_objects_sampled_by_ratio/objects_val_img_to_class.csv")
+    dorsal_right_hands_dataset = Dataset("Dorsal Right Hands","dorsal_right_hands", "/galitylab/students/Noam/Datasets/100_dorsal_right_hands/dorsal_right_hands_val_img_to_class.csv")
+    hands_both_dataset = Dataset("Both hands","hands_both", "/galitylab/students/Noam/Datasets/100_hands_both/both_hands_val_img_to_class.csv")
+    hands_both_bg_dataset = Dataset("Both hands","hands_both", "/galitylab/students/Noam/Datasets/100_hands_both/both_hands_val_img_to_class.csv")
+    # datasets = [faces_dataset, objects_dataset, dorsal_right_hands_dataset, hands_both_dataset]
+    datasets = [faces_dataset, objects_dataset, dorsal_right_hands_dataset, hands_both_bg_dataset]
+    return datasets
+
+
+def get_pairs_list_nets_and_datasets():
+    nets_to_csvs = {"faces": "/galitylab/students/Noam/Seminar_2022/RDM/100_faces_100_each/vgg16/results/dists.csv",
+                    "objects": "/galitylab/students/Noam/Seminar_2022/RDM/100_objects_100_each/vgg16/results/dists.csv",
+                    "hands both": "/galitylab/students/Noam/Seminar_2022/RDM/hands_both_bg/resnet50/results/dists.csv"}
+    datasets_names = ["100_faces_100_each", "100_objects_100_each", "hands_both_bg_unbalanced"]
+    return nets_to_csvs, datasets_names
 
 
 def get_results_path():
@@ -38,13 +51,13 @@ def get_results_path():
     return rdm_file_path, roc_file_path
 
 
-def get_paths_dict():
+def get_paths_dict(datasets, net_types):
     paths_dict = {}  # list to hold the path of upright and inverted
     for dataset in datasets:
         for net in net_types:
             fig_name = (net.title, dataset.title)
             paths_dict[fig_name] = []
-            for state in rotation_states:
+            for state in ROTATION_STATES:
                 old_folder_path = fr'/galitylab/students/Noam/Seminar_2022/RDM/{net.dir_name}/{net.architecture}/results/{dataset.dir_name}_{state.lower()}'
                 result_files = [f for f in os.listdir(old_folder_path)]
                 try:
@@ -58,15 +71,29 @@ def get_paths_dict():
     return paths_dict
 
 
-def main():
+def dist_mat_main():
+    datasets = get_dists_mat_datasets()
+    net_types = get_dists_mat_nets()
+    nets_titles = list(map(lambda x: x.title, net_types))
+    datasets_titles = list(map(lambda x: x.title, datasets))
     rdm_results_path, roc_results_path = get_results_path()
-    csv_paths_dict = get_paths_dict()
-    plot_roc(csv_paths_dict, nets_titles, datasets, roc_results_path)
-    plot_rdm(csv_paths_dict, nets_titles, datasets_titles, rdm_results_path)
+    csv_paths_dict = get_paths_dict(datasets, net_types)
+    plot_dist_mat_roc(csv_paths_dict, nets_titles, datasets, roc_results_path)
+    # plot_rdm(csv_paths_dict, nets_titles, datasets_titles, rdm_results_path)
+
+
+def pairs_list_main():
+    net_to_csv, dataset_names = get_pairs_list_nets_and_datasets()
+    rdm_results_path, roc_results_path = get_results_path()
+    plot_pairs_list_roc(net_to_csv, dataset_names, roc_results_path)
     
 
 if __name__ == '__main__':
-    main()
+    if PAIRS_CSV_TYPE != "dist_mat":
+        dist_mat_main()
+    else:
+        pairs_list_main()
+
 
 
 
