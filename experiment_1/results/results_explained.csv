@@ -1,0 +1,2 @@
+"file name	, explanation,	net weights,	dataset(s)	,dataset2"
+"2023_05_14_01_27_04_ROC.png,	performance of faces net on regular both hands dataset vs random background and resize both hands,dataset	/galitylab/students/Noam/experiments/mlflow/artifact_store/100_faces_sampled_by_ratio/8dae7a60f3bd48e5897f132919dd669e/artifacts/99.pth,	/galitylab/students/Noam/Seminar_2022/RDM/faces_sampled_by_ratio/vgg16/results/hands_both_upright/hands_both_upright_fc7.csv	/galitylab/students/Noam/Seminar_2022/RDM/faces_sampled_by_ratio/vgg16/results/hands_both_bg/hands_both_bg_fc7.csv"

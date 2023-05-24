@@ -18,8 +18,12 @@ ANGLE = 180
 # ], "objects_sampled": ["/galitylab/students/Noam/Datasets/100_objects_sampled_by_ratio/val/",
 #                        "/galitylab/students/Noam/Datasets/inverted/100_objects_sampled_by_ratio/val/"]}
 datasets_names = {
-    "hands_both": ["/galitylab/students/Noam/Datasets/100_hands_both/val/",
-                   "/galitylab/students/Noam/Datasets/inverted/100_hands_both/val/"]
+    "faces": ["/galitylab/students/Noam/Datasets/100_faces_100_each/val/",
+              "/galitylab/students/Noam/Datasets/inverted/100_faces_100_each/val/"],
+    "hands_both": ["/galitylab/students/Noam/Datasets/hands_both_bg/val/",
+                   "/galitylab/students/Noam/Datasets/inverted/hands_both_bg/val/"],
+    "objects": ["/galitylab/students/Noam/Datasets/100_objects_100_each/val/",
+                "/galitylab/students/Noam/Datasets/inverted/100_objects_100_each/val/"]
 }
 for dataset_name in datasets_names:
     # change old_folder_path:

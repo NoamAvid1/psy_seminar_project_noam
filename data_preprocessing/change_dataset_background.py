@@ -9,7 +9,7 @@ BACKGROUND_WIDTH, BACKGROUND_HEIGHT = (1600, 1200) # size of new image in the da
 NUM_TRAIN = 100 # number of images per class in train folder of the new dataset
 NUM_VAL = 25    # number of images per class in val folder
 BRIGHTNESS_CRITERIA = [215, 230, 235, 245, 250]  # how strictly we crop corners of image
-BACKGROUND_IMAGE_PATH = 'background.jpg'
+BACKGROUND_IMAGE_PATH = '/galitylab/students/Noam/psy_seminar_project_noam/data_preprocessing/random_background.jpg'
 
 
 def get_random_background():
@@ -64,7 +64,7 @@ def change_image_background(old_image_path, background_path, new_image_path, bri
 
     front_image.putdata(new_data)
 
-    width, height = get_random_object_location(background_image, front_image)
+    width, height = get_random_object_location(background_image)
 
     background_image.paste(front_image, (width, height), front_image)
     background_image.save(new_image_path, format="png")
@@ -101,5 +101,5 @@ def change_dataset_background(old_dataset_path, new_dataset_path):
 
 
 if __name__ == '__main__':
-    change_dataset_background("/home/ssd_storage/datasets/students/Noam/Hands_upright/",
-                              "/home/ssd_storage/datasets/students/Noam/Hands_upright_bg")
+    change_dataset_background("/galitylab/students/Noam/Datasets/100_dorsal_right_hands/",
+                              "/galitylab/students/Noam/Datasets/100_dorsal_right_hands_bg/")

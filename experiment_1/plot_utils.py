@@ -85,3 +85,38 @@ def plot_roc(paths_dict, nets_titles, datasets, results_path):
     rocs.show()
     rocs.write_image(results_path)
     print(f"wrote ROCs to path {results_path}")
+
+
+def plot_single_roc(csv_paths, results_path,image_to_class_map_path ):
+    """
+    This function was created to add multiple curves on the same figure
+    :param csv_paths: list of RDM dist mat paths as strings
+    :param results_path: were to save results
+    :param image_to_class_map_path: path of csv file that maps image to class name
+    :return:
+    """
+    line_designs = [
+        dict(color='royalblue', width=2),
+        dict(color='firebrick', width=2),
+    ]
+    rocs = make_subplots(rows=1, cols=1,
+                         # subplot_titles=subplots_titles,
+                         x_title='Dataset', y_title='Model domain',
+                         vertical_spacing=0.05,
+                         row_heights=1 * [100])
+    for csv_path in csv_paths:
+        df = pd.read_csv(csv_path)
+        verification_dist_list = stat_utils.rdm_to_dist_list(df, image_to_class_map_path)
+        fpr, tpr, thresh, roc_auc = stat_utils.calc_graph_measurements(verification_dist_list, 'same', 'cos')
+        rocs.add_trace(
+            go.Scatter(x=fpr, y=tpr, mode='lines',
+                       line=line_designs[0]),
+            row=1, col=1)
+    rocs.add_shape(
+        type='line', line=dict(dash='dash'),
+        x0=0, x1=1, y0=0, y1=1, row=1, col=1)
+    rocs.update_layout(height=2 * 750, width=5 * 750 // 2, template='plotly_white', showlegend=False)
+    rocs.update_yaxes(range=[0.0, 1.0])
+    rocs.update_yaxes(range=[0.0, 1.0])
+    rocs.write_image(results_path)
+    print(f"wrote ROCs to path {results_path}")
