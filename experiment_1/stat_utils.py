@@ -9,8 +9,10 @@ def calc_graph_measurements(df: pd.DataFrame, label_col: str, value_col: str):
     and a value column (floats)
     returns the TPR, FPR, thresholds, and AUROC
     """
-    scores = [int(x) for x in df[value_col]]
-    fpr, tpr, thresh = roc_curve(df[label_col], scores, pos_label=0)
+    # scores for L2 distances?
+    # scores = [int(x) for x in df[value_col]]
+
+    fpr, tpr, thresh = roc_curve(df[label_col], df[value_col], pos_label=0)
     roc_auc = auc(fpr, tpr)
 
     return fpr, tpr, thresh, roc_auc
@@ -61,7 +63,7 @@ def pairs_list_to_dist_list(df: pd.DataFrame, dataset_and_rotation):
     """
     Given df of pair and dist, add "same" column and rename to "cos" column
     """
-    df = df[(df['type'] == dataset_and_rotation)]
+    df = df[(df['type'] == dataset_and_rotation)].copy()
     df['same'] = df.iloc[:, 0].apply(is_same_class)
     df.rename({df.columns[1]: 'cos'}, axis=1, inplace=True)
     return df

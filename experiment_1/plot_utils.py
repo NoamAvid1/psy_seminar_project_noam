@@ -81,7 +81,6 @@ def plot_pairs_list_roc(net_to_csv: dict, datasets_names, results_path):
     rocs.update_layout(height=2 * 750, width=5 * 750 // 2, template='plotly_white', showlegend=False)
     rocs.update_yaxes(range=[0.0, 1.0])
     rocs.update_yaxes(range=[0.0, 1.0])
-    rocs.show()
     rocs.write_image(results_path)
     print(f"wrote ROCs to path {results_path}")
 
@@ -128,7 +127,6 @@ def plot_dist_mat_roc(paths_dict, nets_titles, datasets, results_path):
     rocs.update_layout(height=2 * 750, width=5 * 750 // 2, template='plotly_white', showlegend=False)
     rocs.update_yaxes(range=[0.0, 1.0])
     rocs.update_yaxes(range=[0.0, 1.0])
-    rocs.show()
     rocs.write_image(results_path)
     print(f"wrote ROCs to path {results_path}")
 

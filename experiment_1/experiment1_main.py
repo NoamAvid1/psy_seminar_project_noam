@@ -89,7 +89,7 @@ def pairs_list_main():
     
 
 if __name__ == '__main__':
-    if PAIRS_CSV_TYPE != "dist_mat":
+    if PAIRS_CSV_TYPE == "dist_mat":
         dist_mat_main()
     else:
         pairs_list_main()
