@@ -1,34 +1,11 @@
 from glob import glob
-from tqdm import tqdm
 from typing import List, Dict
-from enum import Enum
 from pathlib import Path
-
 from os import path
-
 import pandas as pd
 import numpy as np
-
 from scipy.sparse import csr_matrix
 from scipy.sparse.csgraph import maximum_bipartite_matching
-
-Same_pairs_logic = Enum('Same_pairs_logic', ['STANDARD', 'HANDS_BOTH'])
-NUM_SAME_HAND_ASPECT = 6
-NUM_DIFF_HAND_APSECT = 4
-hands_meta_data_path = ""
-
-
-def create_positive_both_hand_pairs(cls_imgs: List[str]) -> pd.DataFrame:
-    """
-    Create a list of pairs of images, for the SAME cls pairs
-    sample 30 classes and for each class sample:
-    6 for each hand config, and 4 for each combination of two different config
-    """
-    # @todo: complete:
-    num_imgs = len(cls_imgs) // 2
-    pairs = np.random.choice(cls_imgs, [num_imgs, 2], replace=False)
-    pairs = pd.DataFrame(pairs, columns=['img1', 'img2'])
-    return pairs
 
 
 def create_positive_pairs(cls_imgs: List[str]) -> pd.DataFrame:
@@ -108,13 +85,10 @@ def create_negative_pairs(cls2imgs: Dict[str, List[str]]) -> pd.DataFrame:
     return diff_pairs
 
 
-def generate_all_pairs(cls2imgs: Dict[str, List[str]], same_pairs_logic: Same_pairs_logic = None) -> pd.DataFrame:
+def generate_all_pairs(cls2imgs: Dict[str, List[str]]) -> pd.DataFrame:
     same = []
     for cls in cls2imgs:
-        if same_pairs_logic == Same_pairs_logic.HANDS_BOTH:
-            same.append(create_positive_both_hand_pairs(cls2imgs[cls])) # special function to create balanced hands pairs
-        else:
-            same.append(create_positive_pairs(cls2imgs[cls]))
+        same.append(create_positive_pairs(cls2imgs[cls]))
     same = pd.concat(same)
     same['same'] = 1
     print(len(same))
@@ -130,16 +104,16 @@ def globall(pth: str) -> List[str]:
     return glob(path.join(pth, '*'))
 
 
-def get_verification_pairs(ds_path: str, same_pair_logic: Same_pairs_logic) -> pd.DataFrame:
+def get_verification_pairs(ds_path: str) -> pd.DataFrame:
     cls = globall(ds_path)
     cls2imgs = {}
     for cl in cls:
         cls2imgs[cl] = [path.relpath(img, ds_path) for img in globall(cl)]
-    return generate_all_pairs(cls2imgs, same_pair_logic)
+
+    return generate_all_pairs(cls2imgs)
 
 
-def split_to_balanced_lists(all_verification_pairs: pd.DataFrame, n_batches: int, batch_size: int) -> List[
-    pd.DataFrame]:
+def split_to_balanced_lists(all_verification_pairs: pd.DataFrame, n_batches: int, batch_size: int) -> List[pd.DataFrame]:
     # Divide to positive and negatives
     positive = all_verification_pairs[all_verification_pairs['same'] == 1]
     negative = all_verification_pairs[all_verification_pairs['same'] == 0]
@@ -166,13 +140,11 @@ def split_to_balanced_lists(all_verification_pairs: pd.DataFrame, n_batches: int
     return verification_tests
 
 
-def process_ds(ds_path: str, output_dir: str, num_batches: int, batch_size: int, same_pair_logic: Same_pairs_logic) -> None:
-    pairs = get_verification_pairs(ds_path, same_pair_logic)
+def process_ds(ds_path: str, output_dir: str, num_batches: int, batch_size: int) -> None:
+    pairs = get_verification_pairs(ds_path)
     output_path = Path(output_dir)
     output_path.mkdir(parents=True, exist_ok=True)
     pairs.to_csv(path.join(output_dir, 'all.csv'))
-    pairs_partial = pairs[:]
-    pairs.to_csv(path.join(output_dir, f'all_{num_batches}.csv'))
 
     batches = split_to_balanced_lists(pairs, num_batches, batch_size)
     for i in range(num_batches):
@@ -184,19 +156,18 @@ def process_ds(ds_path: str, output_dir: str, num_batches: int, batch_size: int,
 
 
 if __name__ == '__main__':
-    both_hands_paths = ['/galitylab/students/Noam/Datasets/hands_both_bg/val']
+    # names of datasets to create pairs from:
     datasets = ['/galitylab/students/Noam/Datasets/hands_both_bg/val',
                 '/galitylab/students/Noam/Datasets/100_faces_100_each/val/',
                 '/galitylab/students/Noam/Datasets/100_objects_100_each/val/'
                 ]
+    # directory names to save results respectively
     output_inner_dir = ['hands_both_bg_unbalanced',
                         '100_faces_100_each',
                         '100_objects_100_each']
-    metadata_path = "/galitylab/students/Noam/Datasets/100_dorsal_right_hands/metadata/Hand_Metadata.csv"
 
     pairs_output_dir = '/galitylab/students/Noam/Seminar_2022/RDM/verification_paris/'
-    # same_pair_logic = Same_pairs_logic.HANDS_BOTH if ds_path in both_hands_paths else None
-    same_pair_logic = Same_pairs_logic.STANDARD
     for ds, inner in zip(datasets, output_inner_dir):
         print(inner)
-        process_ds(ds, path.join(pairs_output_dir, inner), 30, 48, same_pair_logic)
+        process_ds(ds, path.join(pairs_output_dir, inner), 30, 48)
+        
