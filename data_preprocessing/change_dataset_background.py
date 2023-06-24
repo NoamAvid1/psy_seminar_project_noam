@@ -81,25 +81,31 @@ def change_dataset_background(old_dataset_path, new_dataset_path):
             if not os.path.exists(new_class_path):
                 os.makedirs(new_class_path)
             images = os.listdir(old_class_path)
-            image_count = 0
+            image_count = len(os.listdir(new_class_path))
             iter_count = 1
             while image_count < num_to_sample:
                 for image in images:
                     if image_count >= num_to_sample:
+                        # print(f"cls {cls} now has {len(os.listdir(new_class_path))} images")
                         break
                     old_image_path = os.path.join(old_class_path, image)
                     new_image_path = os.path.join(new_class_path, image[:-4] + "_" + str(iter_count) + ".png")
+                    while image[:-4] + "_" + str(iter_count) + ".png" in os.listdir(new_class_path):
+                        iter_count += 1
+                        new_image_path = os.path.join(new_class_path, image[:-4] + "_" + str(iter_count) + ".png")
                     brightness_criterion = random.choice(BRIGHTNESS_CRITERIA)
                     get_random_background()
                     change_image_background(old_image_path, BACKGROUND_IMAGE_PATH, new_image_path,
                                             brightness_criterion)
                     image_count += 1
                 iter_count += 1
+
             print(f"* {cls_num + 1}/{len(os.listdir(old_dir_path))} classes")
     if os.path.exists(BACKGROUND_IMAGE_PATH):
-        os.remove(BACKGROUND_IMAGE_PATH)
+        os.remove(BACKGROUND_IMAGE_PATH)    
 
 
 if __name__ == '__main__':
-    change_dataset_background("/galitylab/students/Noam/Datasets/100_dorsal_right_hands/",
-                              "/galitylab/students/Noam/Datasets/100_dorsal_right_hands_bg/")
+    print("started main")
+    change_dataset_background("/galitylab/students/Noam/Datasets/50_dr_hands_white/",
+                              "/galitylab/students/Noam/Datasets/50_dr_hands_bg/")

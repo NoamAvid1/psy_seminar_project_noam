@@ -1,0 +1,19 @@
+,model domain,dataset type,auc
+0,faces,100_faces_100_each_upright,0.9664374999999998
+1,faces,100_faces_100_each_inverted,0.7238020833333332
+2,faces,100_objects_100_each_upright,0.5750111111111111
+3,faces,100_objects_100_each_inverted,0.5834041666666667
+4,faces,hands_both_bg_unbalanced_upright,0.5096506944444446
+5,faces,hands_both_bg_unbalanced_inverted,0.5038944444444444
+6,objects,100_faces_100_each_upright,0.5838013888888889
+7,objects,100_faces_100_each_inverted,0.5936513888888889
+8,objects,100_objects_100_each_upright,0.9735555555555556
+9,objects,100_objects_100_each_inverted,0.9176326388888889
+10,objects,hands_both_bg_unbalanced_upright,0.5438027777777777
+11,objects,hands_both_bg_unbalanced_inverted,0.5459166666666666
+12,hands both,100_faces_100_each_upright,0.5251118055555556
+13,hands both,100_faces_100_each_inverted,0.5193836805555556
+14,hands both,100_objects_100_each_upright,0.54576875
+15,hands both,100_objects_100_each_inverted,0.5487597222222222
+16,hands both,hands_both_bg_unbalanced_upright,0.9791277777777777
+17,hands both,hands_both_bg_unbalanced_inverted,0.7099541666666667
