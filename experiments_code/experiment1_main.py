@@ -34,13 +34,13 @@ def get_dists_mat_datasets():
 
 def get_pairs_list_nets_and_datasets():
     ### experiment 1.1 ###
-    # nets_to_csvs = {"faces": "/galitylab/students/Noam/Seminar_2022/RDM/100_faces_resnet/resnet50/results/dists.csv",
-    #                 "objects": "/galitylab/students/Noam/Seminar_2022/RDM/100_objects_resnet/resnet50/results/dists.csv",
-    #                 "hands both": "/galitylab/students/Noam/Seminar_2022/RDM/hands_both_bg/resnet50/results/dists.csv"}
+    # nets_to_csvs = {"faces": r"C:\Users\t-noamavidor\Documents\personal\University\Face_recognition_seminar\psy_seminar_project_noam\seminar_dists_results\experiment_1_1\faces\dists.csv",
+    #                 "hands_both": r"C:\Users\t-noamavidor\Documents\personal\University\Face_recognition_seminar\psy_seminar_project_noam\seminar_dists_results\experiment_1_1\hands_both\dists.csv",
+    #                 "objects": r"C:\Users\t-noamavidor\Documents\personal\University\Face_recognition_seminar\psy_seminar_project_noam\seminar_dists_results\experiment_1_1\objects\dists.csv"}
     # datasets_names = ["100_faces_100_each", "100_objects_100_each", "hands_both_bg_unbalanced"]
     #### experiment 1.2: ###
-    nets_to_csvs = {"DR hands": "/galitylab/students/Noam/Seminar_2022/RDM/50_dr_hands_bg/resnet50/results/dists.csv",
-                    "Both hands": "/galitylab/students/Noam/Seminar_2022/RDM/50_hands_both_bg/resnet50/results/dists.csv"
+    nets_to_csvs = {"DR hands": r"C:\Users\t-noamavidor\Documents\personal\University\Face_recognition_seminar\psy_seminar_project_noam\seminar_dists_results\experiment_1_2\dorsal\dists.csv",
+                    "Both hands": r"C:\Users\t-noamavidor\Documents\personal\University\Face_recognition_seminar\psy_seminar_project_noam\seminar_dists_results\experiment_1_2\both\dists.csv"
                     }
     datasets_names = ["50_dr_hands_bg", "50_hands_both_bg"]
     return nets_to_csvs, datasets_names
@@ -92,7 +92,7 @@ def dist_mat_main():
 def pairs_list_main():
     net_to_csv, dataset_names = get_pairs_list_nets_and_datasets()
     rdm_results_path, roc_results_path, aucs_results_path = get_results_path()
-    plot_pairs_list_roc(net_to_csv, dataset_names, roc_results_path, aucs_results_path)
+    plot_pairs_list_roc(net_to_csv, dataset_names, roc_results_path, aucs_results_path, experiment_name="experiment_1_2")
 
 
 def single_roc_main():
@@ -108,10 +108,7 @@ def single_roc_main():
 
 if __name__ == '__main__':
     # single_roc_main()
-    if PAIRS_CSV_TYPE == "dist_mat":
-        dist_mat_main()
-    else:
-        pairs_list_main()
+    pairs_list_main()
 
 
 

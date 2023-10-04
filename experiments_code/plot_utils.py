@@ -42,7 +42,7 @@ def plot_rdm(paths_dict, nets_titles, datasets_titles, results_path):
     print(f"wrote RDMs to path {results_path}")
 
 
-def plot_pairs_list_roc(net_to_csv: dict, datasets_names, roc_results_path, auc_results_path=None ):
+def plot_pairs_list_roc(net_to_csv: dict, datasets_names, roc_results_path, auc_results_path=None, experiment_name="experiment_1_1" ):
     """
         :param net_to_csv: list of paths of dists csv files, each csv file contains dists
         for the net for all
@@ -65,22 +65,23 @@ def plot_pairs_list_roc(net_to_csv: dict, datasets_names, roc_results_path, auc_
                          vertical_spacing=0.05,
                          row_heights=num_nets * [100])
     aucs_df = pd.DataFrame(columns=['model domain', 'dataset type', 'mean_auc', 'mean_std'])
-    for domain_index, domain in enumerate(list(net_to_csv.keys())):
-        df = pd.read_csv(net_to_csv[domain])
-        for dataset_index, dataset in enumerate(datasets_names):
-            for rotation_state in ["upright", "inverted"]:
-                dataset_and_rotation = f"{dataset}_{rotation_state}"
+    for domain_index, dcnn_domain in enumerate(list(net_to_csv.keys())):
+        df = pd.read_csv(net_to_csv[dcnn_domain])
+        for img_domain_index, img_domain in enumerate(datasets_names):
+            for orientation in ["upright", "inverted"]:
+                dataset_and_orientation = f"{img_domain}_{orientation}"
                 # get df for processing:
-                verification_dist_list = stat_utils.pairs_list_to_dist_list(df, dataset_and_rotation)
+                verification_dist_list = stat_utils.pairs_list_to_dist_list(df, dataset_and_orientation)
                 # get mean and std of aucs per batches:
-                auc_mean, auc_std = stat_utils.get_df_auc_mean_std(verification_dist_list)
+                auc_mean, auc_std = stat_utils.get_df_auc_mean_std(
+                    verification_dist_list, dcnn_domain, img_domain, orientation, experiment_name)
                 # get general auc for plot:
                 fpr, tpr, thresh, roc_auc = stat_utils.calc_graph_measurements(verification_dist_list, 'same', 'cos')
                 rocs.add_trace(
-                    go.Scatter(x=fpr, y=tpr, name=f'{domain} net, {dataset.title} dataset. AUC={roc_auc}', mode='lines',
-                               line=line_designs[0 if rotation_state == "upright" else 1]),
-                    row=1 + domain_index, col=1 + dataset_index)
-                aucs_df.loc[len(aucs_df)] = [domain, dataset_and_rotation, auc_mean, auc_std]
+                    go.Scatter(x=fpr, y=tpr, name=f'{dcnn_domain} net, {img_domain.title} dataset. AUC={auc_mean}', mode='lines',
+                               line=line_designs[0 if orientation == "upright" else 1]),
+                    row=1 + domain_index, col=1 + img_domain_index)
+                aucs_df.loc[len(aucs_df)] = [dcnn_domain, dataset_and_orientation, auc_mean, auc_std]
     for i in range(num_nets):
         for j in range(num_datasets):
             rocs.add_shape(

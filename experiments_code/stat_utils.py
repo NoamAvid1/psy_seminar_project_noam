@@ -72,20 +72,34 @@ def pairs_list_to_dist_list(df: pd.DataFrame, dataset_type):
     return df
 
 
-def get_df_auc_mean_std(df: pd.DataFrame):
+def get_df_auc_mean_std(df: pd.DataFrame, dcnn_domain, img_domain, orientation, experiment_name):
     same_df = df[df['same']]
     same_df = same_df.sample(frac=1)
     diff_df = df[~df['same']]
     diff_df = diff_df.sample(frac=1)
     assert(len(same_df) == len(diff_df))
     aucs = []
+    fprs = []
+    tprs = []
     batch_size = len(diff_df) // NUM_BATCHES
     for i in range(NUM_BATCHES):
         test_df = pd.concat([same_df.iloc[i * batch_size: (i + 1) * batch_size, ],
                             diff_df.iloc[i * batch_size: (i + 1) * batch_size, ]])
         fpr, tpr, thresh, roc_auc = calc_graph_measurements(test_df, 'same', 'cos')
         aucs.append(roc_auc)
+        fprs.append(fpr)
+        tprs.append(tpr)
+
+    # fpr_mean = np.mean(np.array(fprs), axis=0)
+    # tpr_mean = np.mean(np.array(tprs), axis=0)
+    batch_names = [f"{dcnn_domain}_{i}" for i in range(1, NUM_BATCHES + 1)]
     auc_mean, auc_std = np.mean(aucs), np.std(aucs)
+    res_df = pd.DataFrame({"id": batch_names,"auc": aucs})
+    res_df["dcnn_domain"] = dcnn_domain
+    res_df["img_domain"] = img_domain
+    res_df["orientation"] = orientation
+
+    res_df.to_csv(f"../seminar_dists_results/{experiment_name}/batches_aucs/{dcnn_domain}_{img_domain}_{orientation}.csv")
     return auc_mean, auc_std
 
 

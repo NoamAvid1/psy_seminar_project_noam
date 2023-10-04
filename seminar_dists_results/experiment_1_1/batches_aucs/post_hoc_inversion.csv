@@ -1,0 +1,4 @@
+"","img_domain","Effect","DFn","DFd","F","p","p<.05","ges"
+"1","100_faces_100_each","orientation",1,89,26.522,1.55e-06,"*",0.056
+"2","100_objects_100_each","orientation",1,89,3.81,0.054,"",0.002
+"3","hands_both_bg_unbalanced","orientation",1,89,32.99,1.27e-07,"*",0.067

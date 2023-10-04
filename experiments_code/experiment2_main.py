@@ -66,19 +66,20 @@ def precalculated_main():
 
 
 def main():
-    domains = ["objects", "faces"]
-    dists_paths = get_pairs_lists_paths(domains)
+    dcnn_domains = ["objects", "faces"]
+    dists_paths = get_pairs_lists_paths(dcnn_domains)
     print(dists_paths)
     domain_to_auc_mean = {}
     domain_to_auc_std = {}
-    for domain in domains:
-        domain_dfs = list(map(get_dists_df, dists_paths[domain]))
-        domain_to_auc_mean[domain] = []
-        domain_to_auc_std[domain] = []
+    for dcnn_domain in dcnn_domains:
+        domain_dfs = list(map(get_dists_df, dists_paths[dcnn_domain]))
+        domain_to_auc_mean[dcnn_domain] = []
+        domain_to_auc_std[dcnn_domain] = []
         for df in domain_dfs:
-            auc_mean, auc_std = stat_utils.get_df_auc_mean_std(df)
-            domain_to_auc_mean[domain].append(auc_mean)
-            domain_to_auc_std[domain].append(auc_std)
+            auc_mean, auc_std = stat_utils.get_df_auc_mean_std(
+                df, dcnn_domain, DATASET_NAME_IN_DIST_LIST, orientation="upright", experiment_name="experiment_2")
+            domain_to_auc_mean[dcnn_domain].append(auc_mean)
+            domain_to_auc_std[dcnn_domain].append(auc_std)
     print("means: ", domain_to_auc_mean)
     print("aucs:", domain_to_auc_std)
     results_path = get_results_path()
